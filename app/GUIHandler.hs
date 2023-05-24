@@ -1,83 +1,32 @@
 {-# LANGUAGE LambdaCase, OverloadedRecordDot, OverloadedStrings #-}
 
-module GUIHandler where
+module GUIHandler (openGUI) where
 
-import Monomer
+import Monomer ( startApp, WidgetEnv, WidgetNode )
 import InitAndConfig (config)
-import Data.Text (Text, pack)
-import System.Process
-import System.Exit
+import ModelTypes
+    ( initialGlobalState,
+      Model(currentScreen),
+      ScreenState(GHCupScreen, SelectorScreen) )
+import SelectorScreen (selectorScreen)
+import EventHandler (eventHandler)
+import GHCupScreen (ghcUpScreen)
+import EventTypes (Events)
 
-data GlobalState
-    = MkGlobalState
-    { consoleLog    :: Text
-    , currentScreen :: ScreenState
-    , ghcupConfig   :: [Defaults]
-    }
-    deriving Eq
-
-initialGlobalState = MkGlobalState "" InitialScreenState []
-
-data ScreenState = InitialScreenState | AlternateScreenState
-    deriving Eq
-
-data Defaults
-    deriving Eq
-
-data Events
-    = InitWindow
-    | ReturnToDefaultScreen
-    | GetConsole
-    | GHCupList
-    | UpdateConsoleLog Text
-    | Exit
+-- | Actually running the monomer GUI generator.
 
 openGUI :: IO ()
 openGUI =
     startApp
       initialGlobalState
       eventHandler
-      initialUI
+      (flip uiSplitter)
       config
 
-eventHandler
-  :: WidgetEnv GlobalState Events
-  -> WidgetNode GlobalState Events
-  -> GlobalState
-  -> Events
-  -> [AppEventResponse GlobalState Events]
-eventHandler wenv node model = \case
-    ReturnToDefaultScreen ->
-        [Model model {currentScreen = AlternateScreenState}]
-    New                   ->
-        [Model model {currentScreen = InitialScreenState  }]
-    GHCupList             ->
-        [Task  runGHCupList]
-    UpdateConsoleLog text ->
-        [Model model {consoleLog = text}]
-    Exit                  ->
-        [exitApplication]
-
-initialUI
-  :: WidgetEnv GlobalState Events
-  -> GlobalState
-  -> WidgetNode GlobalState Events
-initialUI went model = case model.currentScreen of
-    InitialScreenState   ->
-        hstack
-            [ label "Hello, World!"
-            , button "Ridiculous" ReturnToDefaultScreen
-            , button "Run ghcup List" GHCupList
-            ]
-    AlternateScreenState ->
-        vstack
-            [ label "Goobye, Cruel World!"
-            , button "Whoops" GetConsole
-            , button "Exit"   Exit
-            , label_ model.consoleLog [multiline]
-            ]
-
-runGHCupList :: IO Events
-runGHCupList = do
-    output <- readCreateProcess (shell "ghcup list") "list"
-    pure . UpdateConsoleLog $ pack output
+uiSplitter
+  :: Model
+  -> WidgetEnv Model Events
+  -> WidgetNode Model Events
+uiSplitter state = case state.currentScreen of
+    SelectorScreen -> flip selectorScreen state
+    GHCupScreen    -> flip ghcUpScreen state
