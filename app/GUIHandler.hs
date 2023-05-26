@@ -1,13 +1,13 @@
-{-# LANGUAGE LambdaCase, OverloadedRecordDot, OverloadedStrings #-}
+{-# LANGUAGE OverloadedRecordDot, OverloadedStrings #-}
 
-module GUIHandler (openGUI) where
+module GUIHandler ((🧁)) where
 
 import Monomer ( startApp, WidgetEnv, WidgetNode )
 import InitAndConfig (config)
 import ModelTypes
     ( initialGlobalState,
       Model(currentScreen),
-      ScreenState(GHCupScreen, SelectorScreen) )
+      ScreenState(..) )
 import SelectorScreen (selectorScreen)
 import EventHandler (eventHandler)
 import GHCupScreen (ghcUpScreen)
@@ -15,8 +15,8 @@ import EventTypes (Events)
 
 -- | Actually running the monomer GUI generator.
 
-openGUI :: IO ()
-openGUI =
+(🧁) :: IO ()
+(🧁) =
     startApp
       initialGlobalState
       eventHandler
@@ -27,6 +27,11 @@ uiSplitter
   :: Model
   -> WidgetEnv Model Events
   -> WidgetNode Model Events
-uiSplitter state = case state.currentScreen of
-    SelectorScreen -> flip selectorScreen state
-    GHCupScreen    -> flip ghcUpScreen state
+uiSplitter model = (`displayedScreen` model)
+  where
+    displayedScreen = case model.currentScreen of
+      SelectorScreen -> selectorScreen
+      LinksScreen    -> error "not yet implemented"
+      GHCupScreen    -> ghcUpScreen
+      CabalScreen    -> error "not yet implemented"
+      StackScreen    -> error "not yet implemented"

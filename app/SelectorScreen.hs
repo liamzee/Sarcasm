@@ -2,7 +2,7 @@
 
 module SelectorScreen where
 import Monomer
-    ( UIBuilder, hstack, spacer, CmbOnClick(onClick), WidgetNode )
+    ( UIBuilder, spacer, CmbOnClick(onClick), WidgetNode )
 import ModelTypes (Model)
 import EventTypes (Events (ShowGHCupScreen))
 import Monomer.Widgets (box_, hgrid)

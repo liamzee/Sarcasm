@@ -10,6 +10,7 @@ data Events
     | GetConsole
     | GHCupCommand GHCupCommands
     | UpdateConsoleLog Text
+    | UpdateRequestText Text
     | Exit
 
 data GHCupCommands
@@ -20,3 +21,4 @@ data GHCupCommands
     | Upgrade -- Upgrade GHCup.
     | List    -- List GHCup elements.
     | Nuke    -- Remove GHCup from the system.
+    | GHCupRequest Text -- send an arbitrary command after GHCup. Is a security vulnerability.
